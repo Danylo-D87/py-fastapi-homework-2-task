@@ -8,7 +8,7 @@ from sqlalchemy.orm import selectinload
 from urllib.parse import urlencode, urlparse, parse_qs
 from sqlalchemy.exc import (
     IntegrityError as SQLAlchemyIntegrityError,
-)  # Імпортуємо IntegrityError SQLAlchemy
+)
 
 from database.models import (
     MovieModel,
@@ -32,6 +32,9 @@ from schemas.movies import (
     ActorSchema,
     LanguageSchema,
 )
+
+# Переконайтеся, що MovieStatusEnum імпортується сюди, якщо він потрібен для логіки (не обов'язково після виправлення)
+from database.models import MovieStatusEnum
 
 router = APIRouter(prefix="/movies", tags=["Movies"])
 
@@ -341,6 +344,7 @@ async def update_movie(
             detail="revenue must be non-negative",
         )
     if "status" in update_data:
+        # Цей блок є проблемою, як було зазначено
         allowed_statuses = {"Released", "Post Production", "In Production"}
         if update_data["status"] not in allowed_statuses:
             raise HTTPException(

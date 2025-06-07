@@ -1,10 +1,7 @@
-# schemas/movies.py
-
 from datetime import date
 from typing import List, Optional
 from pydantic import BaseModel, Field, HttpUrl, field_validator
 
-# Переконайтеся, що шлях до імпорту коректний
 from database.models import MovieStatusEnum
 
 
@@ -83,7 +80,7 @@ class MovieCreateSchema(BaseModel):
     date: date
     score: float = Field(..., ge=0, le=100)
     overview: str
-    status: MovieStatusEnum # Використовуємо MovieStatusEnum
+    status: MovieStatusEnum  # Використовуємо MovieStatusEnum
     budget: float = Field(..., ge=0)
     revenue: float = Field(..., ge=0)
     # ЗМІНЕНО: max_length=2 для ISO 3166-1 alpha-2 кодів країн
@@ -112,7 +109,7 @@ class MovieDetailSchema(BaseModel):
     date: date
     score: float
     overview: str
-    status: MovieStatusEnum # ЗМІНЕНО: Використовуємо MovieStatusEnum тут теж
+    status: MovieStatusEnum  # ЗМІНЕНО: Використовуємо MovieStatusEnum тут теж
     budget: float
     revenue: float
     country: Optional[CountrySchema] = None
@@ -133,7 +130,7 @@ class MovieUpdateSchema(BaseModel):
     date: Optional[date] = None
     score: Optional[float] = Field(None, ge=0, le=100)
     overview: Optional[str] = None
-    status: Optional[MovieStatusEnum] = None # Використовуємо MovieStatusEnum
+    status: Optional[MovieStatusEnum] = None  # Використовуємо MovieStatusEnum
     budget: Optional[float] = Field(None, ge=0)
     revenue: Optional[float] = Field(None, ge=0)
 
