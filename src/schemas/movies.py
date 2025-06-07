@@ -1,7 +1,10 @@
+# schemas/movies.py
+
 from datetime import date
 from typing import List, Optional
 from pydantic import BaseModel, Field, HttpUrl, field_validator
 
+# Переконайтеся, що шлях до імпорту коректний
 from database.models import MovieStatusEnum
 
 
@@ -56,7 +59,7 @@ class MovieListItemSchema(BaseModel):
     overview: str
 
     class Config:
-        from_attributes = True  # Дозволяє створювати схему з об'єктів SQLAlchemy
+        from_attributes = True
 
 
 class MovieListResponseSchema(BaseModel):
@@ -80,13 +83,11 @@ class MovieCreateSchema(BaseModel):
     date: date
     score: float = Field(..., ge=0, le=100)
     overview: str
-    # ЗМІНЕНО: Використовуємо MovieStatusEnum безпосередньо
-    status: MovieStatusEnum
+    status: MovieStatusEnum # Використовуємо MovieStatusEnum
     budget: float = Field(..., ge=0)
     revenue: float = Field(..., ge=0)
-    # ЗМІНЕНО: Якщо тести використовують "US" (alpha-2), то змініть max_length на 2
-    # Якщо ви хочете використовувати alpha-3, тоді тести мають бути змінені на "USA"
-    country: str = Field(..., min_length=2, max_length=2)  # ЗМІНЕНО НА 2
+    # ЗМІНЕНО: max_length=2 для ISO 3166-1 alpha-2 кодів країн
+    country: str = Field(..., min_length=2, max_length=2)
     genres: List[str] = Field(default_factory=list)
     actors: List[str] = Field(default_factory=list)
     languages: List[str] = Field(default_factory=list)
@@ -95,12 +96,10 @@ class MovieCreateSchema(BaseModel):
     def date_not_too_far_in_future(cls, v):
         # Якщо ви вже маєте цю валідацію в роутері, то її можна прибрати звідси,
         # щоб уникнути дублювання, але тут вона працює.
+        # Можливо, краще залишити її в схемі, оскільки це валідація даних, а не бізнес-логіка роутера.
         if v > date.today().replace(year=date.today().year + 1):
-            raise ValueError("date cannot be more than one year in the future")
+            raise ValueError("Date cannot be more than one year in the future.")
         return v
-
-    # `@field_validator("status")` тепер не потрібен, якщо використовується MovieStatusEnum
-    # Pydantic автоматично валідуватиме, чи значення відповідає перерахуванню.
 
 
 class MovieDetailSchema(BaseModel):
@@ -113,7 +112,7 @@ class MovieDetailSchema(BaseModel):
     date: date
     score: float
     overview: str
-    status: str
+    status: MovieStatusEnum # ЗМІНЕНО: Використовуємо MovieStatusEnum тут теж
     budget: float
     revenue: float
     country: Optional[CountrySchema] = None
@@ -134,7 +133,14 @@ class MovieUpdateSchema(BaseModel):
     date: Optional[date] = None
     score: Optional[float] = Field(None, ge=0, le=100)
     overview: Optional[str] = None
-    # ЗМІНЕНО: Використовуємо Optional[MovieStatusEnum]
-    status: Optional[MovieStatusEnum] = None
+    status: Optional[MovieStatusEnum] = None # Використовуємо MovieStatusEnum
     budget: Optional[float] = Field(None, ge=0)
     revenue: Optional[float] = Field(None, ge=0)
+
+    # Optional: Додайте валідатор для 'date' тут, якщо він може оновлюватися,
+    # і ви хочете зберегти логіку "не більше ніж на рік у майбутнє".
+    @field_validator("date")
+    def date_not_too_far_in_future_update(cls, v):
+        if v is not None and v > date.today().replace(year=date.today().year + 1):
+            raise ValueError("Updated date cannot be more than one year in the future.")
+        return v
